@@ -1,9 +1,11 @@
 package com.example.android.sunshine.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
 import android.util.Log;
@@ -16,9 +18,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import com.google.common.collect.Lists;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,7 +30,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class ForecastFragment extends Fragment {
@@ -56,29 +55,32 @@ public class ForecastFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         int id = menuItem.getItemId();
         if (id == R.id.action_refresh) {
-            new FetchWeatherTask().execute("05230");
+            updateWeather();
             return true;
         }
         return super.onOptionsItemSelected(menuItem);
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
+
+    private void updateWeather() {
+        String location = ActivityUtils.getPreferredLocation(getActivity());
+        new FetchWeatherTask().execute(location);
+    }
+
+    @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        List<String> weekForecast = Lists.newArrayList(
-                "Today-Sunny-88/63",
-                "Tomorrow-Foggy-70/46",
-                "Weds-Cloudy-72/63",
-                "Thurs-Rainy-64/51",
-                "Fri-Foggy-70/46",
-                "Sat-Sunny-76/68");
 
         forecastAdapter = new ArrayAdapter<>(
                 getActivity(),
                 R.layout.list_item_forecast,
                 R.id.list_item_forecast_textview,
-                weekForecast);
+                new ArrayList<String>());
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
@@ -204,8 +206,12 @@ public class ForecastFragment extends Fragment {
         /**
          * Prepare the weather high/lows for presentation.
          */
-        private String formatHighLows(double high, double low) {
+        private String formatHighLows(double high, double low, String unitType) {
             // For presentation, assume the user doesn't care about tenths of a degree.
+            if (unitType.equals(getString(R.string.pref_unit_imperial))) {
+                high = (high * 1.8) + 32;
+                low = (low * 1.8) + 32;
+            }
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
 
@@ -215,7 +221,7 @@ public class ForecastFragment extends Fragment {
         /**
          * Take the String representing the complete forecast in JSON Format and
          * pull out the data we need to construct the Strings needed for the wireframes.
-         * <p/>
+         * <p>
          * Fortunately parsing is easy:  constructor takes the JSON string and converts it
          * into an Object hierarchy for us.
          */
@@ -278,10 +284,17 @@ public class ForecastFragment extends Fragment {
                 double high = temperatureObject.getDouble(OWM_MAX);
                 double low = temperatureObject.getDouble(OWM_MIN);
 
-                highAndLow = formatHighLows(high, low);
+                String unitType = getUnitPreference();
+
+                highAndLow = formatHighLows(high, low, unitType);
                 resultStrs[i] = day + " - " + description + " - " + highAndLow;
             }
             return resultStrs;
+        }
+
+        private String getUnitPreference() {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            return preferences.getString(getString(R.string.pref_units_key), getString(R.string.pref_unit_metric));
         }
 
         @Override

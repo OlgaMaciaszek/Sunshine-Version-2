@@ -4,15 +4,24 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.ShareActionProvider;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import static android.content.Intent.ACTION_SEND;
+import static android.content.Intent.EXTRA_TEXT;
+
 public class DetailActivity extends ActionBarActivity {
+
+    private static final String LOG_TAG = DetailActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +50,13 @@ public class DetailActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+            return true;
+        }
+
+        if (id == R.id.action_location) {
+            ActivityUtils.openPreferredLocationInMap(this, LOG_TAG);
             return true;
         }
 
@@ -49,23 +65,45 @@ public class DetailActivity extends ActionBarActivity {
 
     public static class DetailFragment extends Fragment {
 
+        private static final String FORECAST_HASHTAG = "#SunshineApp";
+
+        private String forecastStr;
+
         public DetailFragment() {
+            setHasOptionsMenu(true);
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.detail_text);
             Intent detailIntent = getActivity().getIntent();
-            if(detailIntent != null && detailIntent.hasExtra(Intent.EXTRA_TEXT)) {
-                textView.setText(detailIntent.getStringExtra(Intent.EXTRA_TEXT));
+            if (detailIntent != null && detailIntent.hasExtra(EXTRA_TEXT)) {
+                forecastStr = detailIntent.getStringExtra(EXTRA_TEXT);
+                ((TextView) rootView.findViewById(R.id.detail_text))
+                        .setText(forecastStr);
             }
             return rootView;
         }
 
         @Override
-        public void startActivity(Intent intent) {
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            inflater.inflate(R.menu.detail_fragment, menu);
+            MenuItem menuItem = menu.findItem(R.id.action_share);
+            ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+            if (shareActionProvider != null) {
+                shareActionProvider.setShareIntent(createShareForecastIntent());
+            }
+            else {
+                Log.d(LOG_TAG, "Share Action Provider is null?");
+            }
+        }
 
+        private Intent createShareForecastIntent() {
+            Intent shareIntent = new Intent(ACTION_SEND);
+            shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(EXTRA_TEXT, forecastStr + FORECAST_HASHTAG);
+            return shareIntent;
         }
     }
 }

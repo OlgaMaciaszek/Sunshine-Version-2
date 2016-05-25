@@ -1,12 +1,17 @@
 package com.example.android.sunshine.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import static com.example.android.sunshine.app.ActivityUtils.openPreferredLocationInMap;
+
 
 public class MainActivity extends ActionBarActivity {
+
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +40,17 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+            return true;
+        }
+
+        if (id == R.id.action_location) {
+            openPreferredLocationInMap(this, LOG_TAG);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
 }
