@@ -17,7 +17,7 @@ public class ActivityUtils {
     }
 
     public static void openPreferredLocationInMap(Context context, String logTag) {
-        String location = getPreferredLocation(context);
+        String location = Utility.getPreferredLocation(context);
         Uri geolocation = Uri.parse("geo:0.0?").buildUpon()
                 .appendQueryParameter("q", location).build();
         Intent locationIntent = new Intent();
