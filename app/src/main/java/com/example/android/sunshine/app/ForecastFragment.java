@@ -23,7 +23,21 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private static final int FORECAST_LOADER = 0;
 
+    private static final String SELECTED_KEY = "selected position";
+
     private ForecastAdapter forecastAdapter;
+
+    private ListView listView;
+
+    private int position = ListView.INVALID_POSITION;
+    private boolean useTodayLaout;
+
+    public void setUseTodayLaout(boolean useTodayLaout) {
+        this.useTodayLaout = useTodayLaout;
+        if (forecastAdapter != null) {
+            forecastAdapter.setUseTodayLayout(useTodayLaout);
+        }
+    }
 
     public interface Callback {
         void onItemSelected(Uri dateUri);
@@ -79,8 +93,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-
+        listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter(forecastAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -96,8 +109,13 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                             .onItemSelected(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(ForecastProjection.COL_WEATHER_DATE)));
                 }
+                ForecastFragment.this.position = position;
             }
         });
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            this.position = savedInstanceState.getInt(SELECTED_KEY);
+        }
+        forecastAdapter.setUseTodayLayout(useTodayLaout);
 
 //        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 //            @Override
@@ -129,11 +147,22 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         forecastAdapter.swapCursor(cursor);
+        if (position != ListView.INVALID_POSITION) {
+            listView.smoothScrollToPosition(position);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         forecastAdapter.swapCursor(null);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        if (position != ListView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, position);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     public void onLocationChanged() {
