@@ -2,6 +2,7 @@ package com.example.android.sunshine.app;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -20,22 +21,22 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.android.sunshine.app.data.WeatherContract;
+
 import static android.content.Intent.ACTION_SEND;
 import static android.content.Intent.EXTRA_TEXT;
-import static com.example.android.sunshine.app.ForecastProjection.COL_WEATHER_CONDITION_ID;
-import static com.example.android.sunshine.app.ForecastProjection.COL_WEATHER_ID;
 
 public class DetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    static final String DETAIL_URI = "URI";
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
-
     private static final int DETAIL_LOADER = 0;
-
     private static final String FORECAST_HASHTAG = "#SunshineApp";
-
     private ShareActionProvider shareActionProvider;
 
     private String forecastStr;
+
+    private Uri uri;
 
     private ImageView iconView;
     private TextView friendlyDateView;
@@ -53,18 +54,22 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-         //            Intent detailIntent = getActivity().getIntent();
+        //            Intent detailIntent = getActivity().getIntent();
 //            if (detailIntent != null ) {
 //                forecastStr = detailIntent.getDataString();
 //                ((TextView) rootView.findViewById(R.id.detail_text))
 //                        .setText(forecastStr);
 //            }
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            uri = arguments.getParcelable(DETAIL_URI);
+        }
         View view = inflater.inflate(R.layout.fragment_detail, container, false);
         iconView = (ImageView) view.findViewById(R.id.detail_icon);
         friendlyDateView = (TextView) view.findViewById(R.id.detail_day_textview);
         dateView = (TextView) view.findViewById(R.id.detail_date_textview);
         descriptionView = (TextView) view.findViewById(R.id.detail_forecast_textview);
-        highTempView = (TextView) view.findViewById(R.  id.detail_high_textview);
+        highTempView = (TextView) view.findViewById(R.id.detail_high_textview);
         lowTempView = (TextView) view.findViewById(R.id.detail_low_textview);
         humidityView = (TextView) view.findViewById(R.id.detail_humidity_textview);
         windView = (TextView) view.findViewById(R.id.detail_wind_textview);
@@ -102,12 +107,14 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.v(LOG_TAG, "In onCreateLoader");
 
-        final Intent detailIntent = getActivity().getIntent();
-        return new CursorLoader(getActivity(),
-                detailIntent.getData(), DetailProjection.DETAIL_COLUMNS,
-                null,
-                null,
-                null);
+        if (null != uri) {
+            return new CursorLoader(getActivity(),
+                    uri, DetailProjection.DETAIL_COLUMNS,
+                    null,
+                    null,
+                    null);
+        }
+        return null;
     }
 
     @Override
@@ -155,6 +162,16 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
+    }
+
+    void onLocationChanged(String newLocation) {
+        Uri uri = this.uri;
+        if (null != uri) {
+            long date = WeatherContract.WeatherEntry.getDateFromUri(uri);
+            Uri updatedUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
+            this.uri = updatedUri;
+            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+        }
     }
 }
 

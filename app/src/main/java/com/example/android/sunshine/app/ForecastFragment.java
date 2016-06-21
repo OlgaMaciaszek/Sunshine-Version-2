@@ -1,6 +1,5 @@
 package com.example.android.sunshine.app;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,9 +21,13 @@ import com.example.android.sunshine.app.data.WeatherContract;
 
 public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final int FORECAST_LOADER = 0;
+
     private ForecastAdapter forecastAdapter;
 
-    private static final int FORECAST_LOADER = 0;
+    public interface Callback {
+        void onItemSelected(Uri dateUri);
+    }
 
     public ForecastFragment() {
     }
@@ -89,11 +92,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     String locationSetting = Utility.getPreferredLocation(getActivity());
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .setData(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
-                                    locationSetting, cursor.getLong(ForecastProjection.COL_WEATHER_DATE)
-                            ));
-                    startActivity(intent);
+                    ((Callback) getActivity())
+                            .onItemSelected(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
+                                    locationSetting, cursor.getLong(ForecastProjection.COL_WEATHER_DATE)));
                 }
             }
         });
@@ -121,7 +122,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String locationSetting = Utility.getPreferredLocation(getActivity());
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
-        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocation (locationSetting);
+        Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocation(locationSetting);
         return new CursorLoader(getActivity(), weatherForLocationUri, ForecastProjection.FORECAST_COLUMNS, null, null, sortOrder);
     }
 
