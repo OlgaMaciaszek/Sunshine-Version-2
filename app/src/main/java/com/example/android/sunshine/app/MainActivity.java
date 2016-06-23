@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
+
 import static com.example.android.sunshine.app.ActivityUtils.openPreferredLocationInMap;
 
 
@@ -42,6 +44,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
                 .findFragmentById(R.id.fragment_forecast));
         forecastFragment.setUseTodayLaout(!twoPane);
         location = Utility.getPreferredLocation(this);
+        SunshineSyncAdapter.initializeSyncAdapter(this);
     }
 
     @Override

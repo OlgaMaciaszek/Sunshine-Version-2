@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.sunshine.app.data.WeatherContract;
+import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
 
 public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -74,9 +75,18 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 //    }
 
     private void updateWeather() {
-        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
-        String location = Utility.getPreferredLocation(getActivity());
-        weatherTask.execute(location);
+////        Intent serviceIntent = new Intent(getActivity(), SunshineService.class);
+//        String location = Utility.getPreferredLocation(getActivity());
+////        serviceIntent.putExtra(LOCATION_QUERY_EXTRA, location);
+////        getActivity().startService(serviceIntent);
+//        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+//        Intent intent = new Intent(getActivity(), SunshineService.AlarmReceiver.class);
+//        intent.putExtra(LOCATION_QUERY_EXTRA, location);
+//        PendingIntent alarmIntent = PendingIntent.getBroadcast(getActivity(), 0, intent, FLAG_ONE_SHOT);
+////        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, Calendar.getInstance().getTimeInMillis(),
+////                5 * 60 * 1000, alarmIntent);
+//        alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 5000, alarmIntent);
+        SunshineSyncAdapter.syncImmediately(getActivity());
     }
 
     @Override
