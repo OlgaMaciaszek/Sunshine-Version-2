@@ -17,7 +17,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    private static final String DETAILFRAGMENT_TAG = "DFTAG";
+    private static final String DETAIL_FRAGMENT_TAG = "DFTAG";
 
     private String location;
 
@@ -33,18 +33,18 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
         }
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.weather_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+                    .replace(R.id.weather_detail_container, new DetailFragment(), DETAIL_FRAGMENT_TAG)
                     .commit();
         }
         else {
             twoPane = false;
             getSupportActionBar().setElevation(0f);
+            SunshineSyncAdapter.initializeSyncAdapter(this);
         }
         ForecastFragment forecastFragment =  ((ForecastFragment)getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_forecast));
         forecastFragment.setUseTodayLaout(!twoPane);
         location = Utility.getPreferredLocation(this);
-        SunshineSyncAdapter.initializeSyncAdapter(this);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
             if (forecastFragment != null) {
                 forecastFragment.onLocationChanged();
             }
-            DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+            DetailFragment detailFragment = (DetailFragment) getSupportFragmentManager().findFragmentByTag(DETAIL_FRAGMENT_TAG);
             if (detailFragment != null) {
                 detailFragment.onLocationChanged(storedLocation);
             }
@@ -127,7 +127,7 @@ public class MainActivity extends ActionBarActivity implements ForecastFragment.
             DetailFragment detailFragment = new DetailFragment();
             detailFragment.setArguments(args);
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.weather_detail_container, detailFragment, DETAILFRAGMENT_TAG)
+                    .replace(R.id.weather_detail_container, detailFragment, DETAIL_FRAGMENT_TAG)
                     .commit();
         }
         else {
